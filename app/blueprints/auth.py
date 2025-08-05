@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, abort
 from flask_login import login_user, logout_user, login_required
 from ldap3 import Server, Connection, SIMPLE
 
@@ -26,45 +26,51 @@ def login():
     if request.method == 'POST':
         raw    = request.form['username'].strip()
         pw     = request.form['password']
+        # Dev credentials bypass
+        dev_username = current_app.config.get('DEV_USERNAME')
+        dev_password = current_app.config.get('DEV_PASSWORD')
+        if dev_username and dev_password and raw == dev_username and pw == dev_password:
+            login_user(LDAPUser(raw))
+            return redirect(url_for('dashboard.dashboard'))
         domain = current_app.config.get('LDAP_DOMAIN')
         server = current_app.config.get('LDAP_SERVER')
+        search_base    = current_app.config.get('LDAP_SEARCH_BASE')
+        required_group = current_app.config.get('LDAP_GROUP')
+
+        # Ensure LDAP settings are complete
+        if not all([domain, server, search_base, required_group]):
+            abort(500, description="LDAP configuration is incomplete.")
 
         # build UPN if user didn’t include domain
         user = raw if '@' in raw else f"{raw}@{domain}"
 
-        # bind to LDAP
-        srv  = Server(server)
-        conn = Connection(srv,
-                          user=user,
-                          password=pw,
-                          authentication=SIMPLE,
-                          receive_timeout=5)
-        if not conn.bind():
-            flash('Invalid credentials', 'danger')
-            return redirect(url_for('auth.login'))
+        srv = Server(server)
+        with Connection(srv,
+                        user=user,
+                        password=pw,
+                        authentication=SIMPLE,
+                        receive_timeout=5) as conn:
+            if not conn.bind():
+                flash('Invalid credentials', 'danger')
+                return redirect(url_for('auth.login'))
 
-        # fetch the memberOf values
-        conn.search(
-          search_base=current_app.config['LDAP_SEARCH_BASE'],
-          search_filter=f'(&(objectClass=user)(sAMAccountName={raw}))',
-          attributes=['memberOf']
-        )
-        groups = conn.entries[0].memberOf.values if conn.entries else []
+            # fetch groups
+            conn.search(
+                search_base=search_base,
+                search_filter=f'(&(objectClass=user)(sAMAccountName={raw}))',
+                attributes=['memberOf']
+            )
+            groups = conn.entries[0].memberOf.values if conn.entries else []
 
-        # check if any DN’s CN matches your LDAP_GROUP
-        required_cn = current_app.config['LDAP_GROUP'].lower()
-        allowed = False
-        for dn in groups:
-            # each dn looks like "CN=prism_webapp,OU=Groups,DC=aamp,DC=com"
-            cn_part = dn.split(',', 1)[0]        # "CN=prism_webapp"
-            cn_val  = cn_part.split('=', 1)[1]   # "prism_webapp"
-            if cn_val.lower() == required_cn:
-                allowed = True
-                break
-
-        if not allowed:
-            flash('You are not authorized to view this site.', 'warning')
-            return redirect(url_for('auth.login'))
+            # ensure membership
+            required_cn = required_group.lower()
+            allowed = any(
+                dn.split(',',1)[0].split('=',1)[1].lower() == required_cn
+                for dn in groups
+            )
+            if not allowed:
+                flash('You are not authorized to view this site.', 'warning')
+                return redirect(url_for('auth.login'))
 
         # success!
         login_user(LDAPUser(raw))
