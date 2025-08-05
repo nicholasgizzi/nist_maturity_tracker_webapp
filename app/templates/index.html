@@ -1,0 +1,42 @@
+{% extends 'layout.html' %}
+
+{% block title %}Registered Systems{% endblock %}
+
+{% block content %}
+<div class="mt-4">
+  <h1>Registered Systems</h1>
+  <a class="btn btn-primary mb-3" href="{{ url_for('systems.add_system') }}">Add New System</a>
+  <table id="systemsTable" class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Owner</th>
+        <th>Added On</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for system in systems %}
+      <tr>
+        <td><a href="{{ url_for('systems.system_detail', system_id=system.id) }}">{{ system.name }}</a></td>
+        <td>{{ system.description or '–' }}</td>
+        <td>{{ system.owner or '–' }}</td>
+        <td>{{ system.added_on.strftime('%Y-%m-%d') }}</td>
+        <td>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('systems.system_detail', system_id=system.id) }}">View</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function() {
+    $('#systemsTable').DataTable();
+  });
+</script>
+{% endblock %}

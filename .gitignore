@@ -1,0 +1,31 @@
+# Virtual environment
+venv/
+
+# Editor/workspace file
+nist_tracker.code-workspace
+
+# macOS cruft
+.DS_Store
+
+# SQLite DB(s) in instance (the leading slash anchors to repo root)
+instance/*.db
+
+# Instance config (secrets)
+instance/config.py
+
+# Python cache / build artifacts
+__pycache__/
+*/__pycache__/
+*.py[cod]
+
+# Packaging metadata (see below)
+*.egg-info
+
+# Alembic / migration cache
+migrations/__pycache__/
+
+# Optional extras :
+# .env             # if you start using dotenv files for config
+# .coverage        # coverage reports if you run tests
+# .mypy_cache/     # mypy type-checker cache
+# .pytest_cache/   # pytest cache

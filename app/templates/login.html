@@ -1,0 +1,20 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-4">
+    <h1 class="mb-4">Please sign in</h1>
+    <form method="post">
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" name="username" id="username" class="form-control" required autofocus>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" name="password" id="password" class="form-control" required>
+      </div>
+      <button class="btn btn-primary w-100" type="submit">Log In</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

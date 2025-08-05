@@ -1,0 +1,32 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Add Mapping for {{ system.name }}</h1>
+<form method="POST">
+  <div class="mb-3">
+    <label for="subcategory_id" class="form-label">NIST Subcategory</label>
+    <select class="form-select" name="subcategory_id" id="subcategory_id" required>
+      <option value="" disabled selected>Select a subcategory</option>
+      {% for subcat in subcategories %}
+        <option value="{{ subcat.id }}">{{ subcat.code }} - {{ subcat.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label for="score" class="form-label">Score (0–4)</label>
+    <input type="number" min="0" max="5" step="1" class="form-control" name="score" id="score" required>
+  </div>
+  <div class="mb-3">
+    <label for="reviewer" class="form-label">Reviewer</label>
+    <input type="text" class="form-control" name="reviewer" id="reviewer">
+  </div>
+  <div class="mb-3">
+    <label for="notes" class="form-label">Notes</label>
+    <textarea class="form-control" name="notes" id="notes"></textarea>
+  </div>
+  <button type="submit" class="btn btn-success">Save Mapping</button>
+  <a href="{{ url_for('systems.system_detail', system_id=system.id) }}" class="btn btn-secondary">
+    Cancel
+  </a>
+</form>
+{% endblock %}

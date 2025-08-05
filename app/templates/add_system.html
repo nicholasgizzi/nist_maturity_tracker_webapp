@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Add New System</h1>
+<form method="POST">
+  <div class="mb-3">
+    <label for="name" class="form-label">System Name</label>
+    <input type="text" class="form-control" id="name" name="name" required>
+  </div>
+  <div class="mb-3">
+    <label for="description" class="form-label">Description</label>
+    <textarea class="form-control" id="description" name="description"></textarea>
+  </div>
+  <div class="mb-3">
+    <label for="owner" class="form-label">Owner</label>
+    <input type="text" class="form-control" id="owner" name="owner">
+  </div>
+  <div class="mb-3">
+    <label for="notes" class="form-label">Notes</label>
+    <textarea class="form-control" id="notes" name="notes"></textarea>
+  </div>
+  <button type="submit" class="btn btn-success">Add System</button>
+  <a href="{{ url_for('systems.list_systems') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Edit Mapping for {{ mapping.system.name }}</h1>
+<form method="POST">
+  <div class="mb-3">
+    <label for="subcategory_id" class="form-label">NIST Subcategory</label>
+    <select class="form-select" name="subcategory_id" id="subcategory_id" required>
+      {% for subcat in subcategories %}
+      <option value="{{ subcat.id }}"
+        {% if subcat.id == mapping.subcategory_id %}selected{% endif %}>
+        {{ subcat.code }} - {{ subcat.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="score" class="form-label">Score (0–5)</label>
+    <input type="number" min="0" max="5" class="form-control" name="score" id="score"
+           value="{{ mapping.score }}" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="reviewer" class="form-label">Reviewer</label>
+    <input type="text" class="form-control" name="reviewer" id="reviewer"
+           value="{{ mapping.reviewer }}">
+  </div>
+
+  <div class="mb-3">
+    <label for="notes" class="form-label">Notes</label>
+    <textarea class="form-control" name="notes" id="notes">{{ mapping.notes }}</textarea>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Save Changes</button>
+  <a href="{{ url_for('systems.system_detail', system_id=mapping.system.id) }}" class="btn btn-secondary ms-2">Cancel</a>
+</form>
+{% endblock %}

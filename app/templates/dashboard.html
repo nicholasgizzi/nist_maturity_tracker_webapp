@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+<h1 class="mb-4">Cybersecurity Posture Dashboard</h1>
+
+<div class="mb-3">
+  <form method="get" class="form-inline">
+    <label for="view" class="me-2">View:</label>
+    <select name="view" id="view" onchange="this.form.submit()" class="form-select w-auto d-inline">
+      <option value="all" {% if view == 'all' %}selected{% endif %}>Overall</option>
+      <option value="high" {% if view == 'high' %}selected{% endif %}>High Priority</option>
+      <option value="medium" {% if view == 'medium' %}selected{% endif %}>Medium Priority</option>
+      <option value="low" {% if view == 'low' %}selected{% endif %}>Low Priority</option>
+    </select>
+  </form>
+</div>
+
+<table class="table table-bordered text-center align-middle" style="table-layout: fixed; width: 100%;">
+  <thead>
+    <tr>
+      <th class="text-start">Function</th>
+      {% for func in funcs %}
+        <th style="background-color: {{ function_colors[func] }}; {% if func == 'RESPOND' %}color: #fff;{% endif %}">
+          {{ name_map[func] }}
+        </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th class="text-start">Average Score</th>
+      {% for func in funcs %}
+        {% set avg = current_scores.get(func) %}
+        <td><strong>{{ avg is not none and avg or '—' }}</strong></td>
+      {% endfor %}
+    </tr>
+    <tr>
+      <th class="text-start">Change (90 days)</th>
+      {% for func in funcs %}
+        {% set cs = change_scores.get(func) %}
+        <td>
+          {% if cs is not none %}
+            {{ '+' if cs >= 0 else '' }}{{ cs|round(2) }}
+          {% else %}
+            —  
+          {% endif %}
+        </td>
+      {% endfor %}
+    </tr>
+  </tbody>
+</table>
+
+{% endblock %}
