@@ -67,7 +67,12 @@ class SystemMapping(db.Model):
     reviewer = db.Column(db.String(100))
     notes = db.Column(db.Text)
 
-    reviews = db.relationship('Review', backref='mapping', lazy=True)
+    reviews = db.relationship(
+        'Review',
+        back_populates='mapping',
+        cascade='all, delete-orphan',
+        passive_deletes=True
+    )
 
     @validates('score')
     def validate_score(self, key, value):
@@ -81,11 +86,21 @@ class SystemMapping(db.Model):
 class Review(db.Model):
     __tablename__ = 'reviews'
     id = db.Column(db.Integer, primary_key=True)
-    mapping_id = db.Column(db.Integer, db.ForeignKey('system_mappings.id'), nullable=True)
+    mapping_id = db.Column(
+        db.Integer,
+        db.ForeignKey('system_mappings.id', ondelete='SET NULL'),
+        nullable=True
+    )
     score = db.Column(db.Integer, nullable=False)
     reviewer = db.Column(db.String(100))
     review_date = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
+
+    mapping = db.relationship(
+        'SystemMapping',
+        back_populates='reviews',
+        passive_deletes=True
+    )
 
     @validates('score')
     def validate_score(self, key, value):
