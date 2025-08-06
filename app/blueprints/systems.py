@@ -112,6 +112,15 @@ def delete_system(system_id):
         ))
         db.session.delete(m)
 
+    # Audit log: record system deletion
+    db.session.add(Review(
+        mapping_id=None,
+        score=0,
+        reviewer=current_user.username,
+        review_date=datetime.utcnow(),
+        notes=f"Deleted system '{system.name}'"
+    ))
+
     db.session.delete(system)
     db.session.commit()
     flash(f"Deleted system '{system.name}'.", 'success')
