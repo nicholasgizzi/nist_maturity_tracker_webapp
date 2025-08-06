@@ -1,0 +1,84 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>New Risk</h2>
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Risk ID</label>
+    <input type="text" class="form-control" value="{{ next_code }}" readonly name="code">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Description</label>
+    <input type="text" class="form-control" name="description" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Details</label>
+    <textarea class="form-control" name="details" rows="4" placeholder="Enter detailed context here..."></textarea>
+  </div>
+  <div class="row">
+    <div class="col">
+      <label class="form-label">Severity</label>
+      <select id="severity" class="form-select" name="severity">
+        <option value="1">Insignificant</option>
+        <option value="2">Minor</option>
+        <option value="3">Moderate</option>
+        <option value="4">Major</option>
+        <option value="5">Severe</option>
+      </select>
+    </div>
+    <div class="col">
+      <label class="form-label">Likelihood</label>
+      <select id="likelihood" class="form-select" name="likelihood">
+        <option value="1">Rare</option>
+        <option value="2">Unlikely</option>
+        <option value="3">Possible</option>
+        <option value="4">Likely</option>
+        <option value="5">Almost certain</option>
+      </select>
+    </div>
+    <div class="col">
+      <label for="priority-badge" class="form-label">Priority</label>
+      <div class="mt-2">
+        <span id="priority-badge"
+              class="badge badge-pill fs-5 px-3 py-1"
+              style="padding: 0.75em 1.5em; color: #000; border: 1px solid #ccc;">
+          Low
+        </span>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-success mt-3">Register Risk</button>
+</form>
+
+<script>
+  // priority matrix rows = likelihood 1→5 mapped to index 0→4, cols = severity 1→5 mapped to 0→4
+  const matrix = [
+    ["Low","Low","Low","Low","Medium"],      // lik=1
+    ["Low","Low","Medium","Medium","High"],   // lik=2
+    ["Low","Medium","High","High","Very High"],// lik=3
+    ["Medium","High","High","Very High","Very High"],// lik=4
+    ["Medium","High","Very High","Very High","Very High"] // lik=5
+  ];
+  const colors = {
+    "Low": "#70AD46",
+    "Medium": "#FFFF01",
+    "High": "#FFC000",
+    "Very High": "#FE0000"
+  };
+
+  function updatePriority() {
+    const sev = +document.getElementById('severity').value;
+    const lik = +document.getElementById('likelihood').value;
+    // map to indices
+    const row = lik - 1;
+    const col = sev - 1;
+    const label = matrix[row][col];
+    const badge = document.getElementById('priority-badge');
+    badge.textContent = label;
+    badge.style.backgroundColor = colors[label] || '';
+  }
+  document.getElementById('severity').addEventListener('change', updatePriority);
+  document.getElementById('likelihood').addEventListener('change', updatePriority);
+  // initialize on page load
+  updatePriority();
+</script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+{% block content %}
+{% set severity_map = {1: 'Insignificant', 2: 'Minor', 3: 'Moderate', 4: 'Major', 5: 'Severe'} %}
+{% set likelihood_map = {1: 'Rare', 2: 'Unlikely', 3: 'Possible', 4: 'Likely', 5: 'Almost Certain'} %}
+<div class="container mt-4">
+  <h2>Risk {{ risk.code }}</h2>
+  <ul class="list-group mb-4">
+    <li class="list-group-item"><strong>Description:</strong> {{ risk.description }}</li>
+    <li class="list-group-item"><strong>Severity:</strong> {{ severity_map[risk.severity] }}</li>
+    <li class="list-group-item"><strong>Likelihood:</strong> {{ likelihood_map[risk.likelihood] }}</li>
+    <li class="list-group-item"><strong>Score:</strong> {{ risk.risk_score }}</li>
+    <li class="list-group-item">
+      <strong>Level:</strong>
+      <span class="badge" style="background-color: {{ risk.risk_color }};">
+        {{ risk.risk_level }}
+      </span>
+    </li>
+    <li class="list-group-item"><strong>Owner:</strong> {{ risk.owner }}</li>
+    <li class="list-group-item"><strong>Created:</strong> {{ risk.created_at.strftime('%Y-%m-%d %H:%M') }}</li>
+  </ul>
+  <a href="{{ url_for('risks.list_risks') }}" class="btn btn-secondary">Back to Register</a>
+</div>
+{% endblock %}

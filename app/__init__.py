@@ -48,13 +48,15 @@ def create_app():
     from app.blueprints.mappings   import bp as mappings_bp
     from app.blueprints.functions  import bp as functions_bp
     from app.blueprints.priorities import bp as priorities_bp
-    
+    from app.blueprints.risks import bp as risks_bp
+
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(systems_bp)
     app.register_blueprint(mappings_bp)
     app.register_blueprint(functions_bp)
     app.register_blueprint(priorities_bp)
+    app.register_blueprint(risks_bp, url_prefix='/risks')
 
     @app.context_processor
     def inject_nist_functions():
