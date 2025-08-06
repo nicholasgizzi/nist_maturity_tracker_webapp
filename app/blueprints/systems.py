@@ -1,9 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from app import db
 from app.models import System, SystemMapping
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 from flask_login import login_required
+from flask_login import current_user
+from datetime import datetime
+from app.models import Review, SystemMapping
 
 bp = Blueprint('systems', __name__, url_prefix='/systems')
 
@@ -26,12 +29,34 @@ def add_system():
                      owner=request.form.get('owner'),
                      notes=request.form.get('notes'))
         db.session.add(sys)
+        # Attempt to save the new system record
         try:
             db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
-            flash("Could not save—name conflict.", 'danger')
+            current_app.logger.error(f"add_system Integrity Error: {e.orig}")
+            err = str(e.orig).lower()
+            if "unique constraint" in err or "duplicate" in err:
+                flash("Could not save—name conflict.", 'danger')
+            else:
+                flash(f"Could not save system: {e.orig}", "danger")
             return redirect(url_for('systems.list_systems'))
+
+        # Audit log: record system creation (non-blocking)
+        try:
+            db.session.add(Review(
+                mapping_id=None,
+                score=0,
+                reviewer=current_user.username,
+                review_date=datetime.utcnow(),
+                notes=f"Created system '{sys.name}'"
+            ))
+            db.session.commit()
+        except Exception as log_err:
+            db.session.rollback()
+            current_app.logger.warning(f"Failed to log system creation: {log_err}")
+
+        # Redirect to add mappings for the new system
         return redirect(url_for('mappings.add_mapping', system_id=sys.id))
     return render_template('add_system.html')
 
@@ -59,6 +84,14 @@ def edit_system(system_id):
         system.owner       = request.form.get('owner')
         system.notes       = request.form.get('notes')
         db.session.commit()
+        # log system update
+        db.session.add(Review(
+            mapping_id=None,
+            reviewer=current_user.username,
+            review_date=datetime.utcnow(),
+            notes=f"Updated system '{system.name}'"
+        ))
+        db.session.commit()
         flash('System updated.', 'success')
         return redirect(url_for('systems.system_detail', system_id=system.id))
     return render_template('edit_system.html', system=system)
@@ -66,8 +99,19 @@ def edit_system(system_id):
 @bp.route('/<int:system_id>/delete', methods=['POST'])
 def delete_system(system_id):
     system = System.query.get_or_404(system_id)
-    # first delete any mappings tied to this system
-    SystemMapping.query.filter_by(system_id=system.id).delete()
+    # log and delete any mappings tied to this system
+    mappings = SystemMapping.query.filter_by(system_id=system.id).all()
+    for m in mappings:
+        sub_name = m.subcategory.name
+        db.session.add(Review(
+            mapping_id=m.id,
+            score=0,
+            reviewer=current_user.username,
+            review_date=datetime.utcnow(),
+            notes=f"Deleted mapping {sub_name} from {system.name}"
+        ))
+        db.session.delete(m)
+
     db.session.delete(system)
     db.session.commit()
     flash(f"Deleted system '{system.name}'.", 'success')

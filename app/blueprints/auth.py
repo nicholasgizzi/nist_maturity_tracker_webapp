@@ -8,6 +8,7 @@ class LDAPUser:
     """Minimal User object for Flask-Login."""
     def __init__(self, username):
         self.id = username  # flask-login uses `id` attribute
+        self.username = username
 
     def is_authenticated(self): return True
     def is_active(self): return True

@@ -51,4 +51,49 @@
   </tbody>
 </table>
 
+<div class="card mt-5">
+  <div class="card-header">
+    Recent Changes
+  </div>
+  <ul class="list-group list-group-flush">
+    {% for change in recent_changes %}
+    <li class="list-group-item">
+      <div>
+        <small class="text-muted">{{ change.review_date.strftime('%Y-%m-%d %H:%M') }}</small>
+      </div>
+      <div>
+        {% if change.mapping %}
+          {% set sys = change.mapping.system.name %}
+          {% set sub = change.mapping.subcategory.name %}
+          {% if 'created' in change.notes.lower() %}
+            <em>
+              <strong>{{ change.reviewer }}</strong>
+              created <strong>{{ sub }}</strong>
+              for <strong>{{ sys }}</strong>
+            </em>
+          {% elif 'deleted' in change.notes.lower() %}
+            <em>
+              <strong>{{ change.reviewer }}</strong>
+              deleted <strong>{{ sub }}</strong>
+              from <strong>{{ sys }}</strong>
+            </em>
+          {% else %}
+            <em>
+              <strong>{{ change.reviewer }}</strong>
+              set <strong>{{ sub }}:{{ change.score }}</strong>
+              for <strong>{{ sys }}</strong>
+            </em>
+          {% endif %}
+        {% else %}
+          <em>
+            <strong>{{ change.reviewer }}</strong>
+            {{ change.notes }}
+          </em>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
 {% endblock %}

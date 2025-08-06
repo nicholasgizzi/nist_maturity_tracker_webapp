@@ -81,7 +81,7 @@ class SystemMapping(db.Model):
 class Review(db.Model):
     __tablename__ = 'reviews'
     id = db.Column(db.Integer, primary_key=True)
-    mapping_id = db.Column(db.Integer, db.ForeignKey('system_mappings.id'), nullable=False)
+    mapping_id = db.Column(db.Integer, db.ForeignKey('system_mappings.id'), nullable=True)
     score = db.Column(db.Integer, nullable=False)
     reviewer = db.Column(db.String(100))
     review_date = db.Column(db.DateTime, default=datetime.utcnow)

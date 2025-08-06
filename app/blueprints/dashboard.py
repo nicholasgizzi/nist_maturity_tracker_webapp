@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from app.models import Category, Subcategory, SystemMapping
+from app.models import Category, Subcategory, SystemMapping, Review
 from datetime import datetime, timedelta
 from collections import defaultdict
 from flask_login import login_required
@@ -48,6 +48,12 @@ def dashboard():
     change = {f: ((current[f] or 0) - (previous[f] or 0))
               for f in funcs}
 
+    # fetch 10 most recent review entries
+    recent_changes = Review.query \
+        .order_by(Review.review_date.desc()) \
+        .limit(10) \
+        .all()
+
     return render_template(
         'dashboard.html',
         current_scores=current,
@@ -55,5 +61,6 @@ def dashboard():
         view=view,
         funcs=funcs,
         name_map=name_map,
-        function_colors=function_colors
-        )
+        function_colors=function_colors,
+        recent_changes=recent_changes,
+    )

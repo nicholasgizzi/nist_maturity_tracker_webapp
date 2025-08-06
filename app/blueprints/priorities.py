@@ -2,7 +2,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from app.models import Subcategory, PriorityLevel
 from sqlalchemy.exc import SQLAlchemyError
-from flask_login import login_required
+from flask_login import login_required, current_user
+from datetime import datetime
+from app.models import Review
 
 bp = Blueprint('priorities', __name__, url_prefix='/priorities')
 
@@ -30,6 +32,14 @@ def update_priorities_bulk():
                 lvl = PriorityLevel[val.upper()]
                 sub = Subcategory.query.get(sub_id)
                 sub.priority = lvl
+                # audit log for priority change
+                db.session.flush()  # ensure sub.id is available
+                db.session.add(Review(
+                    mapping_id=None,
+                    reviewer=current_user.username,
+                    review_date=datetime.utcnow(),
+                    notes=f"Priority for subcategory '{sub.name}' set to {lvl.name}"
+                ))
             except:
                 continue
     db.session.commit()
