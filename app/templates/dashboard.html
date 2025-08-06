@@ -85,10 +85,17 @@
             </em>
           {% endif %}
         {% else %}
-          <em>
-            <strong>{{ change.reviewer }}</strong>
-            {{ change.notes }}
-          </em>
+          {% if 'deleted system' in change.notes.lower() %}
+            <em>
+              <strong>{{ change.reviewer }}</strong>
+              deleted <strong>{{ change.notes.split("'")[1] }}</strong>
+            </em>
+          {% else %}
+            <em>
+              <strong>{{ change.reviewer }}</strong>
+              {{ change.notes }}
+            </em>
+          {% endif %}
         {% endif %}
       </div>
     </li>
