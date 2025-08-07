@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
-from app.models import Risk
+from app.models import Risk, RiskStatus
 from flask_login import login_required, current_user
 from datetime import datetime
 
@@ -21,6 +21,7 @@ def add_risk():
         sev  = int(request.form['severity'])
         lik  = int(request.form['likelihood'])
         det  = request.form.get('details', '').strip()  # capture details
+        sts = request.form.get('status', RiskStatus.OPEN.value)
         # calculate priority (e.g. sev * lik)
         prio = sev * lik
         # auto-generate code, e.g. R001, R002, ...
@@ -34,6 +35,7 @@ def add_risk():
           priority=prio,
           details=det,   # include details
           owner=current_user.username,
+          status=sts,
           created_at=datetime.utcnow()
         )
         db.session.add(new)
@@ -45,7 +47,8 @@ def add_risk():
     next_id = Risk.query.count() + 1
     return render_template(
       'add_risk.html',
-      next_code=f"R{next_id:03d}"
+      next_code=f"R{next_id:03d}",
+      statuses=[s.value for s in RiskStatus]
     )
 
 @bp.route('/<int:risk_id>')
@@ -67,6 +70,7 @@ def edit_risk(risk_id):
         risk.severity = int(request.form['severity'])
         risk.likelihood = int(request.form['likelihood'])
         risk.details = request.form.get('details', '').strip()
+        risk.status = request.form.get('status', risk.status)
         # update priority
         risk.priority = risk.severity * risk.likelihood
         db.session.commit()
@@ -76,5 +80,6 @@ def edit_risk(risk_id):
     return render_template(
         'add_risk.html',
         next_code=risk.code,
-        risk=risk
+        risk=risk,
+        statuses=[s.value for s in RiskStatus]
     )

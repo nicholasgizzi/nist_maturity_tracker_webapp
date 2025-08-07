@@ -8,6 +8,12 @@ class PriorityLevel(enum.Enum):
     MEDIUM = 'MEDIUM'
     HIGH = 'HIGH'
 
+class RiskStatus(enum.Enum):
+    OPEN = 'Open'
+    IN_PROGRESS = 'In Progress'
+    MITIGATED = 'Mitigated'
+    ACCEPTED = 'Accepted'
+
 class Category(db.Model):
     __tablename__ = 'categories'
     id = db.Column(db.Integer, primary_key=True)
@@ -122,6 +128,11 @@ class Risk(db.Model):
     owner       = db.Column(db.String(100), nullable=False)
     created_at  = db.Column(db.DateTime, nullable=False)
     details     = db.Column(db.Text, nullable=True)
+    status = db.Column(
+        db.Enum(RiskStatus),
+        nullable=False,
+        default=RiskStatus.OPEN
+    )
 
     def __repr__(self):
         return f"<Risk {self.code}>"
@@ -158,3 +169,12 @@ class Risk(db.Model):
             "Very High": "#FE0000",
         }
         return colors.get(self.risk_level, "#FFFFFF")  # default white
+
+    @property
+    def status_label(self):
+        """Human-readable status."""
+        return self.status.value
+
+    @property
+    def status_label(self):
+        return self.status.value

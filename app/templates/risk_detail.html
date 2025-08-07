@@ -17,6 +17,7 @@
     </li>
     <li class="list-group-item"><strong>Owner:</strong> {{ risk.owner }}</li>
     <li class="list-group-item"><strong>Created:</strong> {{ risk.created_at.strftime('%Y-%m-%d %H:%M') }}</li>
+    <li class="list-group-item"><strong>Status:</strong> {{ risk.status.value }}</li>
     <li class="list-group-item">
       <strong>Details:</strong>
       <div class="mt-2">
