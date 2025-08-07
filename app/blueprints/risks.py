@@ -54,3 +54,27 @@ def view_risk(risk_id):
     """Show details for a single risk."""
     risk = Risk.query.get_or_404(risk_id)
     return render_template('risk_detail.html', risk=risk)
+
+
+@bp.route('/<int:risk_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_risk(risk_id):
+    """Edit an existing risk."""
+    risk = Risk.query.get_or_404(risk_id)
+    if request.method == 'POST':
+        # grab form fields
+        risk.description = request.form['description']
+        risk.severity = int(request.form['severity'])
+        risk.likelihood = int(request.form['likelihood'])
+        risk.details = request.form.get('details', '').strip()
+        # update priority
+        risk.priority = risk.severity * risk.likelihood
+        db.session.commit()
+        flash('Risk updated', 'success')
+        return redirect(url_for('risks.view_risk', risk_id=risk.id))
+    # GET: prefill form
+    return render_template(
+        'add_risk.html',
+        next_code=risk.code,
+        risk=risk
+    )

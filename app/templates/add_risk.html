@@ -1,38 +1,47 @@
 {% extends 'layout.html' %}
 {% block content %}
+{% if risk %}
+<h2>Edit Risk {{ risk.code }}</h2>
+{% set action_url = url_for('risks.edit_risk', risk_id=risk.id) %}
+{% else %}
 <h2>New Risk</h2>
-<form method="post">
+{% set action_url = url_for('risks.add_risk') %}
+{% endif %}
+<form method="post" action="{{ action_url }}">
   <div class="mb-3">
     <label class="form-label">Risk ID</label>
-    <input type="text" class="form-control" value="{{ next_code }}" readonly name="code">
+    <input type="text" class="form-control"
+           value="{{ risk.code if risk else next_code }}"
+           readonly name="code">
   </div>
   <div class="mb-3">
     <label class="form-label">Description</label>
-    <input type="text" class="form-control" name="description" required>
+    <input type="text" class="form-control" name="description" required
+           value="{{ risk.description if risk else '' }}">
   </div>
   <div class="mb-3">
     <label class="form-label">Details</label>
-    <textarea class="form-control" name="details" rows="4" placeholder="Enter detailed context here..."></textarea>
+    <textarea class="form-control" name="details" rows="4" placeholder="Enter detailed context here...">{{ risk.details if risk else '' }}</textarea>
   </div>
   <div class="row">
     <div class="col">
       <label class="form-label">Severity</label>
       <select id="severity" class="form-select" name="severity">
-        <option value="1">Insignificant</option>
-        <option value="2">Minor</option>
-        <option value="3">Moderate</option>
-        <option value="4">Major</option>
-        <option value="5">Severe</option>
+        <option value="1" {{ 'selected' if risk and risk.severity==1 }}>Insignificant</option>
+        <option value="2" {{ 'selected' if risk and risk.severity==2 }}>Minor</option>
+        <option value="3" {{ 'selected' if risk and risk.severity==3 }}>Moderate</option>
+        <option value="4" {{ 'selected' if risk and risk.severity==4 }}>Major</option>
+        <option value="5" {{ 'selected' if risk and risk.severity==5 }}>Severe</option>
       </select>
     </div>
     <div class="col">
       <label class="form-label">Likelihood</label>
       <select id="likelihood" class="form-select" name="likelihood">
-        <option value="1">Rare</option>
-        <option value="2">Unlikely</option>
-        <option value="3">Possible</option>
-        <option value="4">Likely</option>
-        <option value="5">Almost certain</option>
+        <option value="1" {{ 'selected' if risk and risk.likelihood==1 }}>Rare</option>
+        <option value="2" {{ 'selected' if risk and risk.likelihood==2 }}>Unlikely</option>
+        <option value="3" {{ 'selected' if risk and risk.likelihood==3 }}>Possible</option>
+        <option value="4" {{ 'selected' if risk and risk.likelihood==4 }}>Likely</option>
+        <option value="5" {{ 'selected' if risk and risk.likelihood==5 }}>Almost certain</option>
       </select>
     </div>
     <div class="col">
@@ -46,7 +55,9 @@
       </div>
     </div>
   </div>
-  <button class="btn btn-success mt-3">Register Risk</button>
+  <button class="btn btn-success mt-3">
+    {{ 'Update Risk' if risk else 'Register Risk' }}
+  </button>
 </form>
 
 <script>

@@ -3,6 +3,14 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from markupsafe import Markup, escape
+
+# nl2br filter for Jinja templates
+def nl2br(value):
+    """Escape input and convert newlines to <br> tags."""
+    if not value:
+        return ''
+    return Markup(escape(value).replace('\n', '<br>\n'))
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -17,7 +25,6 @@ FUNCTION_DEFS = [
     ("RS", "Respond", "#D9241F"),
     ("RC", "Recover", "#82CF6B"),
 ]
-
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
@@ -40,6 +47,8 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = "Please log in to continue."
+    # register nl2br filter for converting newlines to <br>
+    app.jinja_env.filters['nl2br'] = nl2br
 
     # then register your blueprints (as before)…
     from app.blueprints.auth       import auth_bp
