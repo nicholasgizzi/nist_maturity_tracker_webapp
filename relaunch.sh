@@ -30,7 +30,7 @@ pkill -f "flask run --port 5001" 2>/dev/null || true
 pkill -f "flask run --port 5002" 2>/dev/null || true
 
 # Stop Docker containers
-docker-compose down 2>/dev/null || true
+docker compose down 2>/dev/null || true
 
 print_status "Existing services stopped"
 
@@ -82,7 +82,7 @@ fi
 
 # Start containerized version
 print_info "Starting containerized version on port 5002..."
-docker-compose up -d > /dev/null 2>&1
+docker compose up -d > /dev/null 2>&1
 
 # Wait for container to be ready
 sleep 5
@@ -101,7 +101,7 @@ echo "   • Containerized: http://localhost:5002"
 echo ""
 echo "📝 Useful commands:"
 echo "   • Check logs:     tail -f dev_server.log"
-echo "   • Docker logs:    docker-compose logs -f"
-echo "   • Stop all:       docker-compose down && pkill -f 'flask run'"
+echo "   • Docker logs:    docker compose logs -f"
+echo "   • Stop all:       docker compose down && pkill -f 'flask run'"
 echo ""
 print_status "NIST Tracker is ready for executive presentation!"

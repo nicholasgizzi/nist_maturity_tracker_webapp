@@ -72,21 +72,21 @@ echo ""
 
 # Build the Docker image
 print_status "Building Docker image..."
-docker-compose build
+docker compose build
 
 # Run database migrations
 print_status "Running database migrations..."
-docker-compose run --rm nist-tracker flask db upgrade
+docker compose run --rm nist-tracker flask db upgrade
 
 # Seed the database if needed
 if [ "$1" == "--seed" ]; then
     print_status "Seeding database..."
-    docker-compose run --rm nist-tracker python seed.py
+    docker compose run --rm nist-tracker python seed.py
 fi
 
 # Start the services
 print_status "Starting services..."
-docker-compose up -d
+docker compose up -d
 
 # Wait for the app to be ready
 print_status "Waiting for application to start..."
@@ -101,14 +101,14 @@ if curl -f http://localhost:5000/auth/login > /dev/null 2>&1; then
     echo "   • http://localhost (via nginx - if enabled)"
     echo ""
     echo "📊 Check container status:"
-    echo "   docker-compose ps"
+    echo "   docker compose ps"
     echo ""
     echo "📝 View logs:"
-    echo "   docker-compose logs -f"
+    echo "   docker compose logs -f"
     echo ""
     echo "🛑 Stop services:"
-    echo "   docker-compose down"
+    echo "   docker compose down"
 else
-    print_error "Application failed to start. Check logs with: docker-compose logs"
+    print_error "Application failed to start. Check logs with: docker compose logs"
     exit 1
 fi
