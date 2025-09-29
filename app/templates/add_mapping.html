@@ -1,32 +1,67 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Add Mapping for {{ system.name }}</h1>
-<form method="POST">
-  <div class="mb-3">
-    <label for="subcategory_id" class="form-label">NIST Subcategory</label>
-    <select class="form-select" name="subcategory_id" id="subcategory_id" required>
-      <option value="" disabled selected>Select a subcategory</option>
-      {% for subcat in subcategories %}
-        <option value="{{ subcat.id }}">{{ subcat.code }} - {{ subcat.name }}</option>
-      {% endfor %}
-    </select>
+<div class="executive-dashboard">
+  <div class="executive-header">
+    <div class="container">
+      <h1>Add NIST Mapping</h1>
+      <p class="subtitle mb-0">Create assessment mapping for <strong>{{ system.name }}</strong></p>
+    </div>
   </div>
-  <div class="mb-3">
-    <label for="score" class="form-label">Score (0–4)</label>
-    <input type="number" min="0" max="5" step="1" class="form-control" name="score" id="score" required>
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card metric-card">
+          <div class="card-header bg-white border-bottom-0 py-3">
+            <h4 class="mb-1">Mapping Details</h4>
+            <p class="text-muted mb-0 small">Assess system compliance with NIST framework subcategory</p>
+          </div>
+          <div class="card-body">
+            <form method="POST">
+              <div class="mb-3">
+                <label for="subcategory_id" class="form-label fw-bold">NIST Subcategory *</label>
+                <select class="form-select" name="subcategory_id" id="subcategory_id" required>
+                  <option value="" disabled selected>Select a subcategory</option>
+                  {% for subcat in subcategories %}
+                    <option value="{{ subcat.id }}">{{ subcat.code }} - {{ subcat.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="score" class="form-label fw-bold">Maturity Score *</label>
+                <select class="form-select" name="score" id="score" required>
+                  <option value="" disabled selected>Select maturity level</option>
+                  <option value="0">0 - Not Implemented</option>
+                  <option value="1">1 - Initial (Ad Hoc)</option>
+                  <option value="2">2 - Developing (Defined)</option>
+                  <option value="3">3 - Defined (Managed)</option>
+                  <option value="4">4 - Managed (Measured)</option>
+                  <option value="5">5 - Optimized (Continuous Improvement)</option>
+                </select>
+                <div class="form-text">Score the current maturity level of this subcategory for this system</div>
+              </div>
+              <div class="mb-3">
+                <label for="reviewer" class="form-label fw-bold">Reviewer</label>
+                <input type="text" class="form-control" name="reviewer" id="reviewer" placeholder="Who conducted this assessment?">
+              </div>
+              <div class="mb-3">
+                <label for="notes" class="form-label fw-bold">Assessment Notes</label>
+                <textarea class="form-control" name="notes" id="notes" rows="4" placeholder="Document evidence, rationale, and any additional context for this assessment"></textarea>
+              </div>
+              <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('systems.system_detail', system_id=system.id) }}" class="btn btn-executive btn-executive-secondary">
+                  Cancel
+                </a>
+                <button type="submit" class="btn btn-executive btn-executive-success">
+                  Save Mapping
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    <label for="reviewer" class="form-label">Reviewer</label>
-    <input type="text" class="form-control" name="reviewer" id="reviewer">
-  </div>
-  <div class="mb-3">
-    <label for="notes" class="form-label">Notes</label>
-    <textarea class="form-control" name="notes" id="notes"></textarea>
-  </div>
-  <button type="submit" class="btn btn-success">Save Mapping</button>
-  <a href="{{ url_for('systems.system_detail', system_id=system.id) }}" class="btn btn-secondary">
-    Cancel
-  </a>
-</form>
+</div>
 {% endblock %}

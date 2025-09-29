@@ -1,85 +1,127 @@
 {% extends 'layout.html' %}
 {% block content %}
-{% if risk %}
-<h2>Edit Risk {{ risk.code }}</h2>
-{% set action_url = url_for('risks.edit_risk', risk_id=risk.id) %}
-{% else %}
-<h2>New Risk</h2>
-{% set action_url = url_for('risks.add_risk') %}
-{% endif %}
-<form method="post" action="{{ action_url }}">
-  <div class="mb-3">
-    <label class="form-label">Risk ID</label>
-    <input type="text" class="form-control"
-           value="{{ risk.code if risk else next_code }}"
-           readonly name="code">
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Description</label>
-    <input type="text" class="form-control" name="description" required
-           value="{{ risk.description if risk else '' }}">
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Details</label>
-    <textarea class="form-control" name="details" rows="4" placeholder="Enter detailed context here...">{{ risk.details if risk else '' }}</textarea>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Status</label>
-    <select class="form-select" name="status">
-      {% set status_choices = [
-        ('OPEN', 'Open'),
-        ('IN_PROGRESS', 'In Progress'),
-        ('MITIGATED', 'Mitigated'),
-        ('ACCEPTED', 'Accepted')
-      ] %}
-      {% for val,label in status_choices %}
-        <option value="{{ val }}"
-          {% if risk %}
-            {{ 'selected' if risk.status == val }}
-          {% else %}
-            {{ 'selected' if val == 'OPEN' }}
-          {% endif %}>
-          {{ label }}
-        </option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="row">
-    <div class="col">
-      <label class="form-label">Severity</label>
-      <select id="severity" class="form-select" name="severity">
-        <option value="1" {{ 'selected' if risk and risk.severity==1 }}>Insignificant</option>
-        <option value="2" {{ 'selected' if risk and risk.severity==2 }}>Minor</option>
-        <option value="3" {{ 'selected' if risk and risk.severity==3 }}>Moderate</option>
-        <option value="4" {{ 'selected' if risk and risk.severity==4 }}>Major</option>
-        <option value="5" {{ 'selected' if risk and risk.severity==5 }}>Severe</option>
-      </select>
+<div class="executive-dashboard">
+  <div class="executive-header">
+    <div class="container">
+      {% if risk %}
+        <h1>Edit Risk {{ risk.code }}</h1>
+        <p class="subtitle mb-0">Update risk assessment and mitigation details</p>
+      {% else %}
+        <h1>Register New Risk</h1>
+        <p class="subtitle mb-0">Document and assess a new cybersecurity risk</p>
+      {% endif %}
     </div>
-    <div class="col">
-      <label class="form-label">Likelihood</label>
-      <select id="likelihood" class="form-select" name="likelihood">
-        <option value="1" {{ 'selected' if risk and risk.likelihood==1 }}>Rare</option>
-        <option value="2" {{ 'selected' if risk and risk.likelihood==2 }}>Unlikely</option>
-        <option value="3" {{ 'selected' if risk and risk.likelihood==3 }}>Possible</option>
-        <option value="4" {{ 'selected' if risk and risk.likelihood==4 }}>Likely</option>
-        <option value="5" {{ 'selected' if risk and risk.likelihood==5 }}>Almost certain</option>
-      </select>
-    </div>
-    <div class="col">
-      <label for="priority-badge" class="form-label">Priority</label>
-      <div class="mt-2">
-        <span id="priority-badge"
-              class="badge badge-pill fs-5 px-3 py-1"
-              style="padding: 0.75em 1.5em; color: #000; border: 1px solid #ccc;">
-          Low
-        </span>
+  </div>
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-10">
+        <div class="card metric-card">
+          <div class="card-header bg-white border-bottom-0 py-3">
+            <h4 class="mb-1">Risk Assessment</h4>
+            <p class="text-muted mb-0 small">Complete risk evaluation using severity and likelihood matrix</p>
+          </div>
+          <div class="card-body">
+            {% if risk %}
+              {% set action_url = url_for('risks.edit_risk', risk_id=risk.id) %}
+            {% else %}
+              {% set action_url = url_for('risks.add_risk') %}
+            {% endif %}
+            <form method="post" action="{{ action_url }}">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Risk ID</label>
+                    <input type="text" class="form-control"
+                           value="{{ risk.code if risk else next_code }}"
+                           readonly name="code">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Description *</label>
+                    <input type="text" class="form-control" name="description" required
+                           value="{{ risk.description if risk else '' }}" placeholder="Brief risk description">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Risk Status</label>
+                    <select class="form-select" name="status">
+                      {% set status_choices = [
+                        ('OPEN', 'Open'),
+                        ('IN_PROGRESS', 'In Progress'),
+                        ('MITIGATED', 'Mitigated'),
+                        ('ACCEPTED', 'Accepted')
+                      ] %}
+                      {% for val,label in status_choices %}
+                        <option value="{{ val }}"
+                          {% if risk %}
+                            {{ 'selected' if risk.status == val }}
+                          {% else %}
+                            {{ 'selected' if val == 'OPEN' }}
+                          {% endif %}>
+                          {{ label }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Details</label>
+                    <textarea class="form-control" name="details" rows="6" placeholder="Enter detailed context, potential impact, and relevant background information...">{{ risk.details if risk else '' }}</textarea>
+                  </div>
+                </div>
+              </div>
+
+              <hr class="my-4">
+
+              <h5 class="mb-3">Risk Assessment Matrix</h5>
+              <div class="row">
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Severity *</label>
+                  <select id="severity" class="form-select" name="severity">
+                    <option value="1" {{ 'selected' if risk and risk.severity==1 }}>1 - Insignificant</option>
+                    <option value="2" {{ 'selected' if risk and risk.severity==2 }}>2 - Minor</option>
+                    <option value="3" {{ 'selected' if risk and risk.severity==3 }}>3 - Moderate</option>
+                    <option value="4" {{ 'selected' if risk and risk.severity==4 }}>4 - Major</option>
+                    <option value="5" {{ 'selected' if risk and risk.severity==5 }}>5 - Severe</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label fw-bold">Likelihood *</label>
+                  <select id="likelihood" class="form-select" name="likelihood">
+                    <option value="1" {{ 'selected' if risk and risk.likelihood==1 }}>1 - Rare</option>
+                    <option value="2" {{ 'selected' if risk and risk.likelihood==2 }}>2 - Unlikely</option>
+                    <option value="3" {{ 'selected' if risk and risk.likelihood==3 }}>3 - Possible</option>
+                    <option value="4" {{ 'selected' if risk and risk.likelihood==4 }}>4 - Likely</option>
+                    <option value="5" {{ 'selected' if risk and risk.likelihood==5 }}>5 - Almost Certain</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label for="priority-badge" class="form-label fw-bold">Calculated Priority</label>
+                  <div class="mt-2">
+                    <span id="priority-badge"
+                          class="badge fs-6 px-3 py-2 fw-bold"
+                          style="font-size: 1rem !important; border: 1px solid #ccc;">
+                      Low
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('risks.list_risks') }}" class="btn btn-executive btn-executive-secondary">
+                  Cancel
+                </a>
+                <button type="submit" class="btn btn-executive btn-executive-success">
+                  {{ 'Update Risk' if risk else 'Register Risk' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  <button class="btn btn-success mt-3">
-    {{ 'Update Risk' if risk else 'Register Risk' }}
-  </button>
-</form>
+</div>
 
 <script>
   // priority matrix rows = likelihood 1→5 mapped to index 0→4, cols = severity 1→5 mapped to 0→4

@@ -1,49 +1,114 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h2>Risk Register</h2>
-  <a href="{{ url_for('risks.add_risk') }}" class="btn btn-primary">New Risk</a>
+<div class="executive-dashboard">
+  <div class="executive-header">
+    <div class="container">
+      <h1>Risk Register</h1>
+      <p class="subtitle mb-0">Cybersecurity risk tracking and management</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="mb-1">Risk Inventory</h4>
+        <p class="text-muted mb-0">Current risks and mitigation status</p>
+      </div>
+      <a href="{{ url_for('risks.add_risk') }}" class="btn btn-executive btn-executive-primary">
+        New Risk
+      </a>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="risks-table" class="table executive-table mb-0">
+            <thead>
+              <tr>
+                <th>Risk ID</th>
+                <th>Description</th>
+                <th class="text-center">Risk Score</th>
+                <th class="text-center">Priority</th>
+                <th>Owner</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for r in risks %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('risks.view_risk', risk_id=r.id) }}" class="fw-bold text-decoration-none">
+                    {{ r.code }}
+                  </a>
+                </td>
+                <td>
+                  <div class="text-truncate" style="max-width: 300px;" title="{{ r.description }}">
+                    {{ r.description }}
+                  </div>
+                </td>
+                <td class="text-center" data-order="{{ r.risk_score }}">
+                  <span class="h5 mb-0 fw-bold">{{ r.risk_score }}</span>
+                  <small class="text-muted d-block">score</small>
+                </td>
+                <td class="text-center" data-order="{% if r.risk_level == 'Low' %}1{% elif r.risk_level == 'Medium' %}2{% elif r.risk_level == 'High' %}3{% elif r.risk_level == 'Very High' %}4{% else %}0{% endif %}">
+                  <span class="badge px-3 py-2 fw-bold" style="background-color: {{ r.risk_color }}; color: white;">
+                    {{ r.risk_level }}
+                  </span>
+                </td>
+                <td>{{ r.owner }}</td>
+                <td class="text-center" data-order="{% if r.status.value == 'Open' %}1{% elif r.status.value == 'In Progress' %}2{% elif r.status.value == 'Accepted' %}3{% elif r.status.value == 'Closed' %}4{% else %}0{% endif %}">
+                  {% set status_classes = {
+                    'Open': 'bg-danger text-white',
+                    'In Progress': 'bg-warning text-dark',
+                    'Closed': 'bg-success text-white',
+                    'Accepted': 'bg-secondary text-white'
+                  } %}
+                  <span class="badge px-3 py-2 fw-bold {{ status_classes.get(r.status.value, 'bg-light text-dark') }}">
+                    {{ r.status.value }}
+                  </span>
+                </td>
+                <td class="text-center" data-order="{{ r.created_at.strftime('%Y%m%d') }}">
+                  {{ r.created_at.strftime('%b %d, %Y') }}
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-
-
-<table id="risks-table" class="table table-striped">
-  <thead>
-    <tr>
-      <th>Risk ID</th>
-      <th>Description</th>
-      <th>Risk Score</th>
-      <th>Priority</th>
-      <th>Owner</th>
-      <th>Status</th>
-      <th>Created</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for r in risks %}
-    <tr>
-      <td>
-        <a href="{{ url_for('risks.view_risk', risk_id=r.id) }}">
-          {{ r.code }}
-        </a>
-      </td>
-      <td>{{ r.description }}</td>
-      <td>{{ r.risk_score }}</td>
-      <td>
-        <span class="badge" style="background-color: {{ r.risk_color }};">
-          {{ r.risk_level }}
-        </span>
-      </td>
-      <td>{{ r.owner }}</td>
-      <td>{{ r.status.value }}</td>
-      <td>{{ r.created_at.strftime('%Y-%m-%d') }}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    $('#risks-table').DataTable();
+    $('#risks-table').DataTable({
+      pageLength: 25,
+      order: [[2, 'desc']], // Default sort by Risk Score (highest first)
+      columnDefs: [
+        {
+          // Risk Score column
+          targets: 2,
+          type: 'num'
+        },
+        {
+          // Priority column
+          targets: 3,
+          type: 'num'
+        },
+        {
+          // Status column
+          targets: 5,
+          type: 'num'
+        },
+        {
+          // Created date column
+          targets: 6,
+          type: 'num'
+        }
+      ]
+    });
   });
 </script>
 {% endblock %}

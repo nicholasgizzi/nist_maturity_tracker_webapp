@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Local development
+instance/nist_tracker_dev.db
+production_data.db
+test_data.py
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp

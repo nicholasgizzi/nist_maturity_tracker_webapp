@@ -1,76 +1,145 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>{{ system.name }}</h1>
-<p><strong>Description:</strong> {{ system.description or 'N/A' }}</p>
-<p><strong>Owner:</strong> {{ system.owner or 'N/A' }}</p>
-<p><strong>Notes:</strong> {{ system.notes or 'N/A' }}</p>
-<p><strong>Added On:</strong> {{ system.added_on.strftime('%Y-%m-%d') }}</p>
-
-<div class="d-flex align-items-center justify-content-between mb-3">
-  <div class="d-flex align-items-center gap-2">
-    <a href="{{ url_for('mappings.add_mapping', system_id=system.id) }}"
-       class="btn btn-primary">
-      Add Mapping
-    </a>
-    <a href="{{ url_for('systems.edit_system', system_id=system.id) }}"
-       class="btn btn-warning">
-      Edit System
-    </a>
+<div class="executive-dashboard">
+  <div class="executive-header">
+    <div class="container">
+      <h1>{{ system.name }}</h1>
+      <p class="subtitle mb-0">System details and NIST framework mappings</p>
+    </div>
   </div>
-  <form method="POST"
-        action="{{ url_for('systems.delete_system', system_id=system.id) }}"
-        class="ms-auto"
-        onsubmit="return confirm('Delete this system and all its mappings? This action cannot be undone.');">
-    <button type="submit" class="btn btn-danger">
-      Delete System
-    </button>
-  </form>
+
+  <div class="container">
+    <!-- System Information -->
+    <div class="card metric-card mb-4">
+      <div class="card-header bg-white border-bottom-0 py-3">
+        <h4 class="mb-1">System Information</h4>
+        <p class="text-muted mb-0 small">Overview and metadata for this system</p>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold text-muted">Description</label>
+              <p class="mb-0">{{ system.description or 'N/A' }}</p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold text-muted">Owner</label>
+              <p class="mb-0">{{ system.owner or 'N/A' }}</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold text-muted">Notes</label>
+              <p class="mb-0">{{ system.notes or 'N/A' }}</p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold text-muted">Added On</label>
+              <p class="mb-0">{{ system.added_on.strftime('%B %d, %Y') }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('mappings.add_mapping', system_id=system.id) }}"
+           class="btn btn-executive btn-executive-primary">
+          Add Mapping
+        </a>
+        <a href="{{ url_for('systems.edit_system', system_id=system.id) }}"
+           class="btn btn-executive btn-executive-warning">
+          Edit System
+        </a>
+      </div>
+      <form method="POST"
+            action="{{ url_for('systems.delete_system', system_id=system.id) }}"
+            class="ms-auto"
+            onsubmit="return confirm('Delete this system and all its mappings? This action cannot be undone.');">
+        <button type="submit" class="btn btn-executive btn-executive-danger">
+          Delete System
+        </button>
+      </form>
+    </div>
+
+    <!-- Mappings Table -->
+    <div class="card metric-card">
+      <div class="card-header bg-white border-bottom-0 py-3">
+        <h4 class="mb-1">NIST Framework Mappings</h4>
+        <p class="text-muted mb-0 small">Assessment scores and review history</p>
+      </div>
+      <div class="card-body p-0">
+        {% if system.mappings %}
+          <div class="table-responsive">
+            <table class="table executive-table mb-0">
+              <thead>
+                <tr>
+                  <th>Subcategory</th>
+                  <th class="text-center">Score</th>
+                  <th class="text-center">Last Reviewed</th>
+                  <th>Reviewer</th>
+                  <th>Notes</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for mapping in system.mappings %}
+                <tr class="function-{{ mapping.subcategory.category.code.lower() }}">
+                  <td>
+                    <code class="bg-light px-2 py-1 rounded">{{ mapping.subcategory.code }}</code>
+                    <div class="small text-muted mt-1">{{ mapping.subcategory.name }}</div>
+                  </td>
+                  <td class="text-center">
+                    <span class="h5 mb-0 fw-bold">{{ mapping.score }}</span>
+                    <small class="text-muted d-block">out of 5.0</small>
+                  </td>
+                  <td class="text-center">
+                    {% if mapping.last_reviewed %}
+                      {{ mapping.last_reviewed.strftime('%b %d, %Y') }}
+                    {% else %}
+                      <span class="text-muted">Not reviewed</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ mapping.reviewer or '—' }}</td>
+                  <td>
+                    <div class="text-truncate" style="max-width: 200px;" title="{{ mapping.notes or '—' }}">
+                      {{ mapping.notes or '—' }}
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <a href="{{ url_for('mappings.edit_mapping', system_id=system.id, mapping_id=mapping.id) }}"
+                       class="btn btn-sm btn-executive btn-executive-primary me-1">
+                      Edit
+                    </a>
+                    <form method="POST"
+                          action="{{ url_for('mappings.delete_mapping', system_id=system.id, mapping_id=mapping.id) }}"
+                          class="d-inline"
+                          onsubmit="return confirm('Delete this mapping? This action cannot be undone.');">
+                      <button type="submit" class="btn btn-sm btn-executive btn-executive-danger">
+                        Delete
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-5 text-muted">
+            <em>No mappings recorded for this system.</em>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <a href="{{ url_for('systems.list_systems') }}" class="btn btn-executive btn-executive-secondary">
+        ← Back to Systems List
+      </a>
+    </div>
+  </div>
 </div>
-
-<hr>
-<h2>Mappings</h2>
-{% if system.mappings %}
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Subcategory</th>
-        <th>Score</th>
-        <th>Last Reviewed</th>
-        <th>Reviewer</th>
-        <th>Notes</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for mapping in system.mappings %}
-      <tr>
-        <td>{{ mapping.subcategory.code }} - {{ mapping.subcategory.name }}</td>
-        <td>{{ mapping.score }}</td>
-        <td>{{ mapping.last_reviewed.strftime('%Y-%m-%d') if mapping.last_reviewed else 'N/A' }}</td>
-        <td>{{ mapping.reviewer or 'N/A' }}</td>
-        <td>{{ mapping.notes or 'N/A' }}</td>
-        <td>
-          <a href="{{ url_for('mappings.edit_mapping', system_id=system.id, mapping_id=mapping.id) }}"
-             class="btn btn-sm btn-primary me-1">
-            Edit
-          </a>
-          <form method="POST"
-                action="{{ url_for('mappings.delete_mapping', system_id=system.id, mapping_id=mapping.id) }}"
-                class="d-inline"
-                onsubmit="return confirm('Delete this mapping? This action cannot be undone.');">
-            <button type="submit" class="btn btn-sm btn-danger">
-              Delete
-            </button>
-          </form>
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-{% else %}
-  <p>No mappings recorded for this system.</p>
-{% endif %}
-
-<a href="{{ url_for('systems.list_systems') }}" class="btn btn-secondary mt-3">Back to List</a>
 {% endblock %}

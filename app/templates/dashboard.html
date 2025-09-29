@@ -1,106 +1,334 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+<style>
+.executive-dashboard {
+  background: #f8f9fa;
+  min-height: 100vh;
+}
 
-<h1 class="mb-4">Cybersecurity Posture Dashboard</h1>
+.dashboard-header {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  padding: 2rem 0;
+  margin: -1rem -15px 2rem -15px;
+}
 
-<div class="mb-3">
-  <form method="get" class="form-inline">
-    <label for="view" class="me-2">View:</label>
-    <select name="view" id="view" onchange="this.form.submit()" class="form-select w-auto d-inline">
-      <option value="all" {% if view == 'all' %}selected{% endif %}>Overall</option>
-      <option value="high" {% if view == 'high' %}selected{% endif %}>High Priority</option>
-      <option value="medium" {% if view == 'medium' %}selected{% endif %}>Medium Priority</option>
-      <option value="low" {% if view == 'low' %}selected{% endif %}>Low Priority</option>
-    </select>
-  </form>
-</div>
+.metric-card {
+  background: white;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
 
-<table class="table table-bordered text-center align-middle" style="table-layout: fixed; width: 100%;">
-  <thead>
-    <tr>
-      <th class="text-start">Function</th>
-      {% for func in funcs %}
-        <th style="background-color: {{ function_colors[func] }}; {% if func == 'RESPOND' %}color: #fff;{% endif %}">
-          {{ name_map[func] }}
-        </th>
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th class="text-start">Average Score</th>
-      {% for func in funcs %}
-        {% set avg = current_scores.get(func) %}
-        <td><strong>{{ avg is not none and avg or '—' }}</strong></td>
-      {% endfor %}
-    </tr>
-    <tr>
-      <th class="text-start">Change (90 days)</th>
-      {% for func in funcs %}
-        {% set cs = change_scores.get(func) %}
-        <td>
-          {% if cs is not none %}
-            {{ '+' if cs >= 0 else '' }}{{ cs|round(2) }}
-          {% else %}
-            —  
-          {% endif %}
-        </td>
-      {% endfor %}
-    </tr>
-  </tbody>
-</table>
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
 
-<div class="card mt-5">
-  <div class="card-header">
-    Recent Changes
-  </div>
-  <ul class="list-group list-group-flush">
-    {% for change in recent_changes %}
-    <li class="list-group-item">
-      <div>
-        <small class="text-muted">{{ change.review_date.strftime('%Y-%m-%d %H:%M') }}</small>
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.metric-label {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-subtitle {
+  color: #95a5a6;
+  font-size: 0.8rem;
+}
+
+.trend-positive { color: #27ae60; }
+.trend-negative { color: #e74c3c; }
+.trend-neutral { color: #7f8c8d; }
+
+/* NIST Function Colors */
+.function-gv td:first-child {
+  border-left: 4px solid #f8f1c8 !important;
+  background: linear-gradient(90deg, rgba(248, 241, 200, 0.4) 0%, rgba(248, 241, 200, 0.2) 50%, white 100%) !important;
+}
+.function-id td:first-child {
+  border-left: 4px solid #4db2e6 !important;
+  background: linear-gradient(90deg, rgba(77, 178, 230, 0.4) 0%, rgba(77, 178, 230, 0.2) 50%, white 100%) !important;
+}
+.function-pr td:first-child {
+  border-left: 4px solid #c079d6 !important;
+  background: linear-gradient(90deg, rgba(192, 121, 214, 0.4) 0%, rgba(192, 121, 214, 0.2) 50%, white 100%) !important;
+}
+.function-de td:first-child {
+  border-left: 4px solid #fdbe5a !important;
+  background: linear-gradient(90deg, rgba(253, 190, 90, 0.4) 0%, rgba(253, 190, 90, 0.2) 50%, white 100%) !important;
+}
+.function-rs td:first-child {
+  border-left: 4px solid #d9241f !important;
+  background: linear-gradient(90deg, rgba(217, 36, 31, 0.4) 0%, rgba(217, 36, 31, 0.2) 50%, white 100%) !important;
+}
+.function-rc td:first-child {
+  border-left: 4px solid #82cf6b !important;
+  background: linear-gradient(90deg, rgba(130, 207, 107, 0.4) 0%, rgba(130, 207, 107, 0.2) 50%, white 100%) !important;
+}
+
+/* Maturity Level Badges */
+.maturity-adhoc { background-color: #dc3545 !important; color: white !important; }
+.maturity-initial { background-color: #fd7e14 !important; color: white !important; }
+.maturity-defined { background-color: #ffc107 !important; color: black !important; }
+.maturity-managed { background-color: #20c997 !important; color: white !important; }
+.maturity-optimized { background-color: #198754 !important; color: white !important; }
+</style>
+
+<div class="executive-dashboard">
+  <div class="dashboard-header">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="mb-1">Cybersecurity Posture Assessment</h1>
+          <p class="mb-0 opacity-75">Executive Overview - NIST Cybersecurity Framework</p>
+        </div>
+        <div class="d-flex align-items-center">
+          <label for="view" class="me-2 opacity-75">Filter:</label>
+          <form method="get" class="d-inline">
+            <select name="view" id="view" onchange="this.form.submit()" class="form-select bg-transparent text-white border-light">
+              <option value="all" {% if view == 'all' %}selected{% endif %} class="text-dark">All Categories</option>
+              <option value="high" {% if view == 'high' %}selected{% endif %} class="text-dark">High Priority</option>
+              <option value="medium" {% if view == 'medium' %}selected{% endif %} class="text-dark">Medium Priority</option>
+              <option value="low" {% if view == 'low' %}selected{% endif %} class="text-dark">Low Priority</option>
+            </select>
+          </form>
+        </div>
       </div>
-      <div>
-        {% if change.mapping %}
-          {% set sys = change.mapping.system.name %}
-          {% set sub = change.mapping.subcategory.name %}
-          {% if 'created' in change.notes.lower() %}
-            <em>
-              <strong>{{ change.reviewer }}</strong>
-              created <strong>{{ sub }}</strong>
-              for <strong>{{ sys }}</strong>
-            </em>
-          {% elif 'deleted' in change.notes.lower() %}
-            <em>
-              <strong>{{ change.reviewer }}</strong>
-              deleted <strong>{{ sub }}</strong>
-              from <strong>{{ sys }}</strong>
-            </em>
-          {% else %}
-            <em>
-              <strong>{{ change.reviewer }}</strong>
-              set <strong>{{ sub }}:{{ change.score }}</strong>
-              for <strong>{{ sys }}</strong>
-            </em>
-          {% endif %}
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Executive Summary Metrics -->
+    <div class="row mb-4">
+      <div class="col-md-3 mb-3">
+        <div class="card metric-card">
+          <div class="card-body text-center p-4">
+            <div class="metric-value">
+              {% set valid_scores = [] %}
+              {% for score in current_scores.values() %}
+                {% if score is not none %}
+                  {% set _ = valid_scores.append(score) %}
+                {% endif %}
+              {% endfor %}
+              {% if valid_scores %}
+                {{ "%.1f" | format(valid_scores | sum / valid_scores | length) }}
+              {% else %}
+                N/A
+              {% endif %}
+            </div>
+            <div class="metric-label">Overall Maturity</div>
+            <div class="metric-subtitle">Scale: 0-5.0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card metric-card">
+          <div class="card-body text-center p-4">
+            <div class="metric-value trend-positive">
+              {% set positive_count = 0 %}
+              {% for value in change_scores.values() %}
+                {% if value and value > 0 %}
+                  {% set positive_count = positive_count + 1 %}
+                {% endif %}
+              {% endfor %}
+              {{ positive_count }}
+            </div>
+            <div class="metric-label">Improving</div>
+            <div class="metric-subtitle">Last 90 days</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card metric-card">
+          <div class="card-body text-center p-4">
+            <div class="metric-value trend-negative">
+              {% set negative_count = 0 %}
+              {% for value in change_scores.values() %}
+                {% if value and value < 0 %}
+                  {% set negative_count = negative_count + 1 %}
+                {% endif %}
+              {% endfor %}
+              {{ negative_count }}
+            </div>
+            <div class="metric-label">Declining</div>
+            <div class="metric-subtitle">Needs attention</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card metric-card">
+          <div class="card-body text-center p-4">
+            <div class="metric-value">{{ recent_changes | length }}</div>
+            <div class="metric-label">Recent Activity</div>
+            <div class="metric-subtitle">Last 10 updates</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NIST Framework Assessment Table -->
+    <div class="card metric-card mb-4">
+      <div class="card-header bg-white border-bottom-0 py-3">
+        <h4 class="mb-1">NIST Cybersecurity Framework Assessment</h4>
+        <p class="text-muted mb-0 small">Current maturity scores and 90-day trend analysis</p>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-borderless mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th class="px-4 py-3 border-0">Function</th>
+                <th class="text-center py-3 border-0">Current Score</th>
+                <th class="text-center py-3 border-0">Maturity Level</th>
+                <th class="text-center py-3 border-0">90-Day Trend</th>
+                <th class="text-center py-3 border-0">Progress</th>
+                <th class="px-4 py-3 border-0"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for func in funcs %}
+                {% set avg = current_scores.get(func) %}
+                {% set change = change_scores.get(func) %}
+                <tr class="border-bottom function-{{ func.lower() }}">
+                  <td class="px-4 py-4">
+                    <div class="d-flex align-items-center">
+                      <div class="w-3 h-100 me-3" style="width: 6px; height: 40px; background-color: {{ function_colors[func] }}; border-radius: 3px;"></div>
+                      <div>
+                        <div class="fw-bold">{{ name_map[func] }}</div>
+                        <small class="text-muted">{{ func }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-center py-4">
+                    {% if avg is not none %}
+                      <span class="h5 mb-0">{{ "%.1f"|format(avg) }}</span>
+                      <small class="text-muted d-block">out of 5.0</small>
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center py-4">
+                    {% if avg is not none %}
+                      {% if avg >= 4.0 %}
+                        <span class="badge maturity-optimized px-3 py-2 fw-bold">Optimized</span>
+                      {% elif avg >= 3.0 %}
+                        <span class="badge maturity-managed px-3 py-2 fw-bold">Managed</span>
+                      {% elif avg >= 2.0 %}
+                        <span class="badge maturity-defined px-3 py-2 fw-bold">Defined</span>
+                      {% elif avg >= 1.0 %}
+                        <span class="badge maturity-initial px-3 py-2 fw-bold">Initial</span>
+                      {% else %}
+                        <span class="badge maturity-adhoc px-3 py-2 fw-bold">Ad Hoc</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center py-4">
+                    {% if change is not none %}
+                      {% if change > 0 %}
+                        <span class="trend-positive">↗ +{{ "%.1f"|format(change) }}</span>
+                      {% elif change < 0 %}
+                        <span class="trend-negative">↘ {{ "%.1f"|format(change) }}</span>
+                      {% else %}
+                        <span class="trend-neutral">→ 0.0</span>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td class="py-4">
+                    {% if avg is not none %}
+                      {% set percentage = (avg / 5.0 * 100) %}
+                      <div class="progress" style="height: 8px; width: 120px;">
+                        <div class="progress-bar bg-secondary"
+                             style="width: {{ percentage }}%;"
+                             aria-valuenow="{{ avg }}"
+                             aria-valuemin="0"
+                             aria-valuemax="5"></div>
+                      </div>
+                    {% else %}
+                      <div class="text-muted small">No data</div>
+                    {% endif %}
+                  </td>
+                  <td class="px-4 py-4">
+                    <a href="{{ url_for('functions.view_function', function=func.lower()) }}"
+                       class="btn btn-link btn-sm text-muted p-0">
+                      View Details →
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card metric-card">
+      <div class="card-header bg-white border-bottom-0 py-3">
+        <h4 class="mb-1">Recent Activity</h4>
+        <p class="text-muted mb-0 small">Latest assessment updates and changes</p>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_changes %}
+          <div class="list-group list-group-flush">
+            {% for change in recent_changes %}
+              <div class="list-group-item border-0 px-4 py-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <div class="mb-1">
+                      {% if change.mapping %}
+                        {% set sys = change.mapping.system.name %}
+                        {% set sub = change.mapping.subcategory.name %}
+                        {% if 'created' in change.notes.lower() %}
+                          <strong>{{ change.reviewer }}</strong> created assessment for
+                          <code>{{ sub }}</code> on <strong>{{ sys }}</strong>
+                        {% elif 'deleted' in change.notes.lower() %}
+                          <strong>{{ change.reviewer }}</strong> removed assessment for
+                          <code>{{ sub }}</code> from <strong>{{ sys }}</strong>
+                        {% else %}
+                          <strong>{{ change.reviewer }}</strong> updated
+                          <code>{{ sub }}</code> score to <strong>{{ change.score }}</strong> for <strong>{{ sys }}</strong>
+                        {% endif %}
+                      {% else %}
+                        {% if 'deleted system' in change.notes.lower() %}
+                          <strong>{{ change.reviewer }}</strong> removed system
+                          <strong>{{ change.notes.split("'")[1] }}</strong>
+                        {% else %}
+                          <strong>{{ change.reviewer }}</strong> {{ change.notes }}
+                        {% endif %}
+                      {% endif %}
+                    </div>
+                    <small class="text-muted">{{ change.review_date.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                  </div>
+                  {% if change.mapping and change.score is not none %}
+                    <span class="badge bg-light text-dark ms-3">{{ change.score }}/5</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         {% else %}
-          {% if 'deleted system' in change.notes.lower() %}
-            <em>
-              <strong>{{ change.reviewer }}</strong>
-              deleted <strong>{{ change.notes.split("'")[1] }}</strong>
-            </em>
-          {% else %}
-            <em>
-              <strong>{{ change.reviewer }}</strong>
-              {{ change.notes }}
-            </em>
-          {% endif %}
+          <div class="text-center py-5 text-muted">
+            <em>No recent activity</em>
+          </div>
         {% endif %}
       </div>
-    </li>
-    {% endfor %}
-  </ul>
+    </div>
+  </div>
 </div>
 
 {% endblock %}

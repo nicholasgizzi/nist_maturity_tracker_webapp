@@ -27,7 +27,7 @@ def dashboard():
         'RC': '#82CF6B'
     }
 
-    def avg_by(since=None):
+    def avg_by(since=None, before=None):
         # initialize every function to an empty list
         buckets = {f: [] for f in funcs}
         for s in subcats:
@@ -35,15 +35,18 @@ def dashboard():
             if view != 'all' and (s.priority is None or s.priority.value.lower() != view):
                 continue
             for m in s.system_mappings:
-                if since and m.last_reviewed >= since:
+                # Filter by date range
+                if since and m.last_reviewed < since:
+                    continue
+                if before and m.last_reviewed >= before:
                     continue
                 buckets[s.category.code].append(m.score)
         # compute averages (None if no scores)
         return {f: (round(sum(vals)/len(vals),2) if vals else None)
                 for f, vals in buckets.items()}
 
-    current = avg_by()                  # all scores ever
-    previous = avg_by(since=cutoff)     # those before cutoff
+    current = avg_by()                              # all scores ever
+    previous = avg_by(before=cutoff)                # those from more than 90 days ago
     # subtract; if current None treat as 0
     change = {f: ((current[f] or 0) - (previous[f] or 0))
               for f in funcs}

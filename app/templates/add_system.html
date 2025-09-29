@@ -1,25 +1,53 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<h1>Add New System</h1>
-<form method="POST">
-  <div class="mb-3">
-    <label for="name" class="form-label">System Name</label>
-    <input type="text" class="form-control" id="name" name="name" required>
+<div class="executive-dashboard">
+  <div class="executive-header">
+    <div class="container">
+      <h1>Add New System</h1>
+      <p class="subtitle mb-0">Register a new system for NIST framework assessment</p>
+    </div>
   </div>
-  <div class="mb-3">
-    <label for="description" class="form-label">Description</label>
-    <textarea class="form-control" id="description" name="description"></textarea>
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card metric-card">
+          <div class="card-header bg-white border-bottom-0 py-3">
+            <h4 class="mb-1">System Information</h4>
+            <p class="text-muted mb-0 small">Enter the basic details for the new system</p>
+          </div>
+          <div class="card-body">
+            <form method="POST">
+              <div class="mb-3">
+                <label for="name" class="form-label fw-bold">System Name *</label>
+                <input type="text" class="form-control" id="name" name="name" required placeholder="Enter system name">
+              </div>
+              <div class="mb-3">
+                <label for="description" class="form-label fw-bold">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe the system's purpose and functionality"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="owner" class="form-label fw-bold">Owner</label>
+                <input type="text" class="form-control" id="owner" name="owner" placeholder="System owner or responsible party">
+              </div>
+              <div class="mb-3">
+                <label for="notes" class="form-label fw-bold">Notes</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Additional notes or comments"></textarea>
+              </div>
+              <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('systems.list_systems') }}" class="btn btn-executive btn-executive-secondary">
+                  Cancel
+                </a>
+                <button type="submit" class="btn btn-executive btn-executive-success">
+                  Add System
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    <label for="owner" class="form-label">Owner</label>
-    <input type="text" class="form-control" id="owner" name="owner">
-  </div>
-  <div class="mb-3">
-    <label for="notes" class="form-label">Notes</label>
-    <textarea class="form-control" id="notes" name="notes"></textarea>
-  </div>
-  <button type="submit" class="btn btn-success">Add System</button>
-  <a href="{{ url_for('systems.list_systems') }}" class="btn btn-secondary">Cancel</a>
-</form>
+</div>
 {% endblock %}

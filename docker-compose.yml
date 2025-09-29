@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  nist-tracker:
+    build: .
+    container_name: nist_tracker_webapp
+    restart: unless-stopped
+    ports:
+      - "5002:5000"
+    volumes:
+      # Mount instance directory for config and database
+      - ./instance:/app/instance
+      # Mount migrations directory
+      - ./migrations:/app/migrations
+    environment:
+      - FLASK_ENV=production
+    networks:
+      - nist-network
+
+  # Optional: nginx reverse proxy for production
+  # Uncomment for production deployment with reverse proxy
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: nist_tracker_nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - nist-tracker
+  #   networks:
+  #     - nist-network
+
+networks:
+  nist-network:
+    driver: bridge
