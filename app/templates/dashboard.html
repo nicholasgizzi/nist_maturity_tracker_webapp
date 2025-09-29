@@ -169,109 +169,113 @@
       <div class="col-md-3 mb-3">
         <div class="card metric-card">
           <div class="card-body text-center p-4">
-            <div class="metric-value">{{ recent_changes | length }}</div>
-            <div class="metric-label">Recent Activity</div>
-            <div class="metric-subtitle">Last 10 updates</div>
+            <div class="metric-value text-danger">{{ high_risk_count }}</div>
+            <div class="metric-label">High-Risk Items</div>
+            <div class="metric-subtitle">Score ≥ 15</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- NIST Framework Assessment Table -->
-    <div class="card metric-card mb-4">
-      <div class="card-header bg-white border-bottom-0 py-3">
+    <!-- NIST Framework Assessment - Executive Dashboard -->
+    <div class="mb-4">
+      <div class="mb-3">
         <h4 class="mb-1">NIST Cybersecurity Framework Assessment</h4>
         <p class="text-muted mb-0 small">Current maturity scores and 90-day trend analysis</p>
       </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-borderless mb-0">
-            <thead class="bg-light">
-              <tr>
-                <th class="px-4 py-3 border-0">Function</th>
-                <th class="text-center py-3 border-0">Current Score</th>
-                <th class="text-center py-3 border-0">Maturity Level</th>
-                <th class="text-center py-3 border-0">90-Day Trend</th>
-                <th class="text-center py-3 border-0">Progress</th>
-                <th class="px-4 py-3 border-0"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for func in funcs %}
-                {% set avg = current_scores.get(func) %}
-                {% set change = change_scores.get(func) %}
-                <tr class="border-bottom function-{{ func.lower() }}">
-                  <td class="px-4 py-4">
-                    <div class="d-flex align-items-center">
-                      <div class="w-3 h-100 me-3" style="width: 6px; height: 40px; background-color: {{ function_colors[func] }}; border-radius: 3px;"></div>
-                      <div>
-                        <div class="fw-bold">{{ name_map[func] }}</div>
-                        <small class="text-muted">{{ func }}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="text-center py-4">
+
+      <!-- Executive Status Board - Single Row -->
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="row g-0">
+            {% for func in funcs %}
+              {% set avg = current_scores.get(func) %}
+              {% set change = change_scores.get(func) %}
+              <div class="col-2">
+                <div class="executive-function-tile text-center p-4 h-100 position-relative"
+                     style="border-top: 4px solid {{ function_colors[func] }}; {% if not loop.last %}border-right: 1px solid #dee2e6;{% endif %}">
+
+                  <!-- Function Name -->
+                  <div class="mb-2">
+                    <h6 class="fw-bold mb-0 text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">{{ func }}</h6>
+                    <small class="text-muted d-block" style="font-size: 0.7rem;">{{ name_map[func] }}</small>
+                  </div>
+
+                  <!-- Score Display -->
+                  <div class="mb-2">
                     {% if avg is not none %}
-                      <span class="h5 mb-0">{{ "%.1f"|format(avg) }}</span>
-                      <small class="text-muted d-block">out of 5.0</small>
+                      <div class="display-4 fw-bold mb-1" style="color: {{ function_colors[func] }}; line-height: 1;">
+                        {{ "%.1f"|format(avg) }}
+                      </div>
+                      <small class="text-muted" style="font-size: 0.7rem;">/ 5.0</small>
                     {% else %}
-                      <span class="text-muted">—</span>
+                      <div class="display-4 fw-bold mb-1 text-muted" style="line-height: 1;">—</div>
+                      <small class="text-muted" style="font-size: 0.7rem;">/ 5.0</small>
                     {% endif %}
-                  </td>
-                  <td class="text-center py-4">
+                  </div>
+
+                  <!-- Progress Indicator -->
+                  {% if avg is not none %}
+                    {% set percentage = (avg / 5.0 * 100) %}
+                    <div class="progress mb-2 mx-auto" style="height: 4px; width: 80%;">
+                      <div class="progress-bar"
+                           style="width: {{ percentage }}%; background-color: {{ function_colors[func] }};"
+                           aria-valuenow="{{ avg }}"
+                           aria-valuemin="0"
+                           aria-valuemax="5"></div>
+                    </div>
+                  {% else %}
+                    <div class="progress mb-2 mx-auto" style="height: 4px; width: 80%;">
+                      <div class="progress-bar bg-light" style="width: 0%;"></div>
+                    </div>
+                  {% endif %}
+
+                  <!-- Maturity Badge -->
+                  <div class="mb-2">
                     {% if avg is not none %}
                       {% if avg >= 4.0 %}
-                        <span class="badge maturity-optimized px-3 py-2 fw-bold">Optimized</span>
+                        <span class="badge bg-success" style="font-size: 0.6rem;">OPTIMIZED</span>
                       {% elif avg >= 3.0 %}
-                        <span class="badge maturity-managed px-3 py-2 fw-bold">Managed</span>
+                        <span class="badge bg-primary" style="font-size: 0.6rem;">MANAGED</span>
                       {% elif avg >= 2.0 %}
-                        <span class="badge maturity-defined px-3 py-2 fw-bold">Defined</span>
+                        <span class="badge bg-info" style="font-size: 0.6rem;">DEFINED</span>
                       {% elif avg >= 1.0 %}
-                        <span class="badge maturity-initial px-3 py-2 fw-bold">Initial</span>
+                        <span class="badge bg-warning" style="font-size: 0.6rem;">INITIAL</span>
                       {% else %}
-                        <span class="badge maturity-adhoc px-3 py-2 fw-bold">Ad Hoc</span>
+                        <span class="badge bg-danger" style="font-size: 0.6rem;">AD HOC</span>
                       {% endif %}
                     {% else %}
-                      <span class="text-muted">—</span>
+                      <span class="badge bg-light text-muted" style="font-size: 0.6rem;">NO DATA</span>
                     {% endif %}
-                  </td>
-                  <td class="text-center py-4">
+                  </div>
+
+                  <!-- Trend Indicator -->
+                  <div class="mb-2">
                     {% if change is not none %}
                       {% if change > 0 %}
-                        <span class="trend-positive">↗ +{{ "%.1f"|format(change) }}</span>
+                        <small class="trend-positive" style="font-size: 0.7rem;">↗ +{{ "%.1f"|format(change) }}</small>
                       {% elif change < 0 %}
-                        <span class="trend-negative">↘ {{ "%.1f"|format(change) }}</span>
+                        <small class="trend-negative" style="font-size: 0.7rem;">↘ {{ "%.1f"|format(change) }}</small>
                       {% else %}
-                        <span class="trend-neutral">→ 0.0</span>
+                        <small class="trend-neutral" style="font-size: 0.7rem;">→ 0.0</small>
                       {% endif %}
                     {% else %}
-                      <span class="text-muted">—</span>
+                      <small class="text-muted" style="font-size: 0.7rem;">—</small>
                     {% endif %}
-                  </td>
-                  <td class="py-4">
-                    {% if avg is not none %}
-                      {% set percentage = (avg / 5.0 * 100) %}
-                      <div class="progress" style="height: 8px; width: 120px;">
-                        <div class="progress-bar bg-secondary"
-                             style="width: {{ percentage }}%;"
-                             aria-valuenow="{{ avg }}"
-                             aria-valuemin="0"
-                             aria-valuemax="5"></div>
-                      </div>
-                    {% else %}
-                      <div class="text-muted small">No data</div>
-                    {% endif %}
-                  </td>
-                  <td class="px-4 py-4">
+                  </div>
+
+                  <!-- View Details Link -->
+                  <div>
                     <a href="{{ url_for('functions.view_function', function=func.lower()) }}"
-                       class="btn btn-link btn-sm text-muted p-0">
-                      View Details →
+                       class="btn btn-link btn-sm p-0 text-decoration-none"
+                       style="font-size: 0.7rem;">
+                      Details →
                     </a>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </div>

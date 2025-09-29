@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from app.models import Category, Subcategory, SystemMapping, Review
+from app.models import Category, Subcategory, SystemMapping, Review, System, Risk
 from datetime import datetime, timedelta
 from collections import defaultdict
 from flask_login import login_required
@@ -47,15 +47,26 @@ def dashboard():
 
     current = avg_by()                              # all scores ever
     previous = avg_by(before=cutoff)                # those from more than 90 days ago
-    # subtract; if current None treat as 0
-    change = {f: ((current[f] or 0) - (previous[f] or 0))
-              for f in funcs}
 
-    # fetch 10 most recent review entries
-    recent_changes = Review.query \
-        .order_by(Review.review_date.desc()) \
-        .limit(10) \
-        .all()
+    # Better trend calculation - only compare if we have historical data
+    change = {}
+    for f in funcs:
+        if previous[f] is not None and current[f] is not None:
+            change[f] = round(current[f] - previous[f], 2)
+        else:
+            change[f] = 0  # No trend available
+
+    # Executive-focused metrics
+    total_systems = System.query.count()
+    # Calculate high-risk using actual database columns (severity * likelihood >= 15)
+    high_risk_count = Risk.query.filter((Risk.severity * Risk.likelihood) >= 15).count()
+    low_maturity_count = sum(1 for score in current.values()
+                           if score is not None and score < 2.0)
+
+    # Recent assessments (more meaningful than raw review count)
+    recent_assessments = SystemMapping.query \
+        .filter(SystemMapping.last_reviewed >= cutoff) \
+        .count()
 
     return render_template(
         'dashboard.html',
@@ -65,5 +76,8 @@ def dashboard():
         funcs=funcs,
         name_map=name_map,
         function_colors=function_colors,
-        recent_changes=recent_changes,
+        total_systems=total_systems,
+        high_risk_count=high_risk_count,
+        low_maturity_count=low_maturity_count,
+        recent_assessments=recent_assessments,
     )
